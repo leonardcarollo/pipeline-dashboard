@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Pipeline — Consolidated</title>
+<style>
+  :root {
+    --ground: #eaeef2;
+    --surface: #ffffff;
+    --surface-2: #f4f7f9;
+    --border: #d7dee5;
+    --border-strong: #c2ccd6;
+    --ink: #121a22;
+    --muted: #5a6774;
+    --faint: #8a97a4;
+    --accent: #0c6f6a;
+    --accent-bright: #12a19a;
+    --shadow: 0 1px 2px rgba(18,26,34,.06), 0 8px 24px rgba(18,26,34,.06);
+
+    --p1: #0f9d63;   /* New Backup Gen DR  */
+    --p1-bg: rgba(15,157,99,.12);
+    --p2: #d98a04;   /* BESS DR            */
+    --p2-bg: rgba(217,138,4,.14);
+    --p3: #6161e6;   /* Existing Backup Gen*/
+    --p3-bg: rgba(97,97,230,.13);
+    --p4: #0c8fce;   /* Facility DM        */
+    --p4-bg: rgba(12,143,206,.13);
+
+    --mono: ui-monospace, "Cascadia Code", "Consolas", "SFMono-Regular", monospace;
+    --sans: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0a0f14;
+      --surface: #121b23;
+      --surface-2: #18232d;
+      --border: #24313d;
+      --border-strong: #33434f;
+      --ink: #e8eef3;
+      --muted: #9caab7;
+      --faint: #66757f;
+      --accent: #33c7be;
+      --accent-bright: #4fd8cf;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+      --p1: #26c07d; --p1-bg: rgba(38,192,125,.15);
+      --p2: #f2a93b; --p2-bg: rgba(242,169,59,.16);
+      --p3: #8f8ff5; --p3-bg: rgba(143,143,245,.16);
+      --p4: #38b0ea; --p4-bg: rgba(56,176,234,.16);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground:#eaeef2; --surface:#fff; --surface-2:#f4f7f9; --border:#d7dee5; --border-strong:#c2ccd6;
+    --ink:#121a22; --muted:#5a6774; --faint:#8a97a4; --accent:#0c6f6a; --accent-bright:#12a19a;
+    --shadow:0 1px 2px rgba(18,26,34,.06),0 8px 24px rgba(18,26,34,.06);
+    --p1:#0f9d63;--p1-bg:rgba(15,157,99,.12);--p2:#d98a04;--p2-bg:rgba(217,138,4,.14);
+    --p3:#6161e6;--p3-bg:rgba(97,97,230,.13);--p4:#0c8fce;--p4-bg:rgba(12,143,206,.13);
+  }
+  :root[data-theme="dark"] {
+    --ground:#0a0f14; --surface:#121b23; --surface-2:#18232d; --border:#24313d; --border-strong:#33434f;
+    --ink:#e8eef3; --muted:#9caab7; --faint:#66757f; --accent:#33c7be; --accent-bright:#4fd8cf;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+    --p1:#26c07d;--p1-bg:rgba(38,192,125,.15);--p2:#f2a93b;--p2-bg:rgba(242,169,59,.16);
+    --p3:#8f8ff5;--p3-bg:rgba(143,143,245,.16);--p4:#38b0ea;--p4-bg:rgba(56,176,234,.16);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--sans); line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 32px 24px 72px; }
+
+  /* Header */
+  header.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: 20px; }
+  .title-block .eyebrow {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 8px; font-weight: 600;
+  }
+  h1 { font-size: clamp(26px, 4vw, 38px); line-height: 1.08; margin: 0; letter-spacing: -.02em; font-weight: 700; text-wrap: balance; }
+  .subtitle { color: var(--muted); margin: 8px 0 0; font-size: 15px; max-width: 62ch; }
+  .top-meta { display: flex; align-items: center; gap: 14px; }
+  .theme-btn {
+    font-family: var(--mono); font-size: 12px; color: var(--muted); background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px; transition: border-color .15s, color .15s;
+  }
+  .theme-btn:hover { border-color: var(--border-strong); color: var(--ink); }
+  .theme-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* View tabs */
+  .seg {
+    display: inline-flex; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 11px; padding: 3px; gap: 3px; margin-bottom: 22px;
+  }
+  .seg button {
+    font-family: var(--sans); font-size: 13.5px; font-weight: 600; letter-spacing: .01em;
+    padding: 8px 20px; border: none; border-radius: 8px; background: transparent;
+    color: var(--muted); cursor: pointer; transition: color .13s, background .13s;
+    -webkit-font-smoothing: antialiased;
+  }
+  .seg button:hover { color: var(--ink); }
+  .seg button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+  .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .seg .n { font-family: var(--mono); font-size: 11.5px; color: var(--faint); margin-left: 6px; font-weight: 500; }
+  .seg button[aria-selected="true"] .n { color: var(--accent); }
+
+  /* KPI tiles */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 14px; margin-bottom: 24px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 18px 16px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .kpi .label { font-size: 12.5px; color: var(--muted); font-weight: 500; margin: 0 0 10px; }
+  .kpi .num { font-family: var(--mono); font-size: 34px; font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1; }
+  .kpi .num.qtr { font-size: 27px; }
+  .kpi .sub { font-size: 12px; color: var(--faint); margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .kpi .rail { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); }
+
+  /* Panels */
+  .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 26px; }
+  @media (max-width: 720px){ .panels { grid-template-columns: 1fr; } }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); }
+  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 0 0 16px; font-weight: 600; }
+
+  /* bar chart */
+  .bars { display: flex; flex-direction: column; gap: 11px; }
+  .bar-row { display: grid; grid-template-columns: 108px 1fr 34px; align-items: center; gap: 12px; }
+  .bar-row .name { font-size: 13px; color: var(--ink); font-family: var(--mono); }
+  .bar-track { background: var(--surface-2); border-radius: 6px; height: 20px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; min-width: 3px; transition: width .5s cubic-bezier(.2,.7,.3,1); }
+  .bar-row .val { font-family: var(--mono); font-size: 13px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+  .prod-cov { display: flex; flex-direction: column; gap: 13px; }
+  .cov-row { display: grid; grid-template-columns: 1fr 46px; align-items: center; gap: 10px; }
+  .cov-top { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .cov-track { grid-column: 1 / -1; background: var(--surface-2); border-radius: 6px; height: 8px; overflow: hidden; margin-top: -4px; }
+  .cov-fill { height: 100%; border-radius: 6px; transition: width .5s cubic-bezier(.2,.7,.3,1); }
+  .dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .cov-val { font-family: var(--mono); font-size: 13px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* Toolbar */
+  .toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .search { position: relative; flex: 1 1 240px; min-width: 200px; }
+  .search input {
+    width: 100%; font-family: var(--sans); font-size: 14px; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 9px;
+    padding: 10px 12px 10px 34px;
+  }
+  .search input::placeholder { color: var(--faint); }
+  .search input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--faint); }
+  .filters { display: flex; gap: 7px; flex-wrap: wrap; }
+  .chip {
+    font-family: var(--sans); font-size: 12.5px; font-weight: 600; letter-spacing: .01em;
+    color: var(--muted); background: var(--surface);
+    border: 1px solid var(--border); border-radius: 999px; padding: 6px 13px; cursor: pointer;
+    transition: all .13s; white-space: nowrap;
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  .chip:hover { border-color: var(--border-strong); color: var(--ink); }
+  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  @media (prefers-color-scheme: dark){ .chip[aria-pressed="true"]{ color:#04120f; } }
+  :root[data-theme="dark"] .chip[aria-pressed="true"]{ color:#04120f; }
+  :root[data-theme="light"] .chip[aria-pressed="true"]{ color:#fff; }
+  .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .count-line { font-size: 13px; color: var(--muted); margin: 0 0 10px; font-variant-numeric: tabular-nums; }
+  .count-line b { color: var(--ink); font-weight: 600; }
+
+  /* Table */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 860px; }
+  thead th {
+    position: sticky; top: 0; background: var(--surface-2); z-index: 2;
+    text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 600; padding: 13px 14px; border-bottom: 1px solid var(--border);
+    white-space: nowrap; user-select: none;
+  }
+  thead th.sortable { cursor: pointer; }
+  thead th.sortable:hover { color: var(--ink); }
+  thead th .arrow { color: var(--accent); font-size: 10px; margin-left: 3px; }
+  th.prodhead { text-align: center; }
+  tbody td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13.5px; vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--surface-2); }
+  td.project { font-weight: 600; color: var(--ink); }
+  td.iso, td.util { color: var(--muted); }
+  .iso-tag { font-family: var(--mono); font-size: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; color: var(--ink); white-space: nowrap; }
+  .iso-tag.na { color: var(--faint); }
+  .q-tag { font-family: var(--mono); font-size: 12.5px; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .q-tbd { font-family: var(--mono); font-size: 12px; color: var(--faint); background: var(--surface-2); border-radius: 6px; padding: 3px 8px; }
+  td.prod { text-align: center; }
+  .pchip { display: inline-flex; width: 22px; height: 22px; border-radius: 6px; align-items: center; justify-content: center; }
+  .pchip svg { width: 13px; height: 13px; }
+  .pnone { color: var(--faint); opacity: .5; }
+
+  footer { margin-top: 26px; color: var(--faint); font-size: 12.5px; line-height: 1.7; }
+  footer .lg { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 12px; }
+  footer .lg span { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12.5px; }
+  footer .note { max-width: 84ch; }
+  @media (prefers-reduced-motion: reduce){ * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="title-block">
+      <p class="eyebrow">Energy-as-a-Service · Consolidated View</p>
+      <h1>Project Pipeline</h1>
+      <p class="subtitle">Demand-response &amp; demand-management scope across the development portfolio — upcoming pipeline and closed projects, by grid region and utility.</p>
+    </div>
+    <div class="top-meta">
+      <button class="theme-btn" id="themeBtn" type="button" aria-label="Toggle color theme">
+        <span id="themeIcon">◐</span><span id="themeLabel">Theme</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="seg" role="tablist" aria-label="Project status view">
+    <button type="button" role="tab" id="tabUpcoming" aria-selected="true">Upcoming<span class="n" id="nUpcoming"></span></button>
+    <button type="button" role="tab" id="tabClosed" aria-selected="false">Closed<span class="n" id="nClosed"></span></button>
+  </div>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="panels">
+    <div class="panel">
+      <h2>Projects by grid region</h2>
+      <div class="bars" id="isoBars"></div>
+    </div>
+    <div class="panel">
+      <h2>Product coverage</h2>
+      <div class="prod-cov" id="prodCov"></div>
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <div class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      <input type="text" id="search" placeholder="Search projects, utilities, regions…" aria-label="Search">
+    </div>
+    <div class="filters" id="isoFilters"></div>
+    <div class="filters" id="prodFilters"></div>
+  </div>
+
+  <p class="count-line" id="countLine"></p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" data-key="project">Project</th>
+          <th class="sortable" data-key="isoGroup">ISO / RTO</th>
+          <th class="sortable" data-key="utility">Utility</th>
+          <th class="sortable" data-key="closeSort" id="closeHead">Projected Close</th>
+          <th class="prodhead">New Gen DR</th>
+          <th class="prodhead">BESS DR</th>
+          <th class="prodhead">Existing Gen DR</th>
+          <th class="prodhead">Facility DM</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    <div class="lg" id="footLegend"></div>
+    <p class="note">A <b>✓</b> in the source workbook means the product is in scope for that project; an <b>x</b> or a blank means not in scope. Upcoming projects without a projected-close quarter are shown as <b>TBD</b>; a <b>—</b> means the field is blank in the source. Closed-project dates are the closing quarter from the workbook's Closed tab. Source: <i>Upcoming and Active Projects — Consolidated.xlsx</i> · Bernhard / ENFRA.</p>
+  </footer>
+</div>
+
+<script>
+const PRODUCTS = [
+  { key:"newGen",   short:"New Gen DR",      full:"New Backup Gen DR",      color:"var(--p1)", bg:"var(--p1-bg)" },
+  { key:"bess",     short:"BESS DR",         full:"BESS DR",                color:"var(--p2)", bg:"var(--p2-bg)" },
+  { key:"existGen", short:"Existing Gen DR", full:"Existing Backup Gen DR", color:"var(--p3)", bg:"var(--p3-bg)" },
+  { key:"facDM",    short:"Facility DM",     full:"Facility DM",            color:"var(--p4)", bg:"var(--p4-bg)" },
+];
+
+// close quarter -> sortable index (TBD sorts last)
+function qSort(c){ if(!c) return 9999; const m=c.match(/Q(\d)'(\d\d)/); return m? (2000+ +m[2])*10 + +m[1] : 9998; }
+
+// Product flags: 1 = ✓ (in scope). "x" and blank in the source both mean NOT in scope (0).
+// Columns: project, iso (as shown), isoGroup (for filtering), utility, close, newGen, bess, existGen, facDM
+const RAW_UPCOMING = [
+  ["Brown University Health","ISONE","ISONE","Rhode Island Energy","Q3'26",0,1,0,0],
+  ["Northwestern Health","PJM","PJM","ComEd","Q3'26",0,1,1,1],
+  ["MultiCare Health System","N/A (WECC)","WECC","Tacoma Public Utilities / Puget Sound Energy","Q3'26",0,0,0,0],
+  ["Indiana University Health","MISO","MISO","AES, Duke, IMP","Q4'26",0,1,0,0],
+  ["Xavier University","PJM","PJM","Duke Energy Ohio","Q4'26",0,0,0,1],
+  ["PIH Health — Phase 2","CAISO","CAISO","Southern California Edison","Q4'26",0,0,0,0],
+  ["Northern Light","ISONE","ISONE","Central Maine Power (CMP)","Q4'26",0,1,0,0],
+  ["Sharp Healthcare","CAISO","CAISO","SDG&E","Q4'26",0,1,0,0],
+  ["Bay State","ISONE","ISONE","Eversource","Q1'27",0,1,0,0],
+  ["U of L Health","N/A","N/A","LG&E/KU","Q1'27",0,0,1,0],
+  ["La Sierra University","CAISO","CAISO","Riverside Public Utilities","",0,0,0,1],
+  ["Westchester Medical","NYISO","NYISO","Con Edison","",0,1,0,0],
+  ["Kaleida Health","NYISO","NYISO","National Grid","Q1'27",0,1,0,0],
+  ["Beacon Health","MISO","MISO","Indiana Michigan Power (AEP)","",0,0,1,0],
+];
+const RAW_CLOSED = [
+  ["Hartford HealthCare","ISONE","ISONE","Eversource","Q3'26",0,1,0,1],
+  ["MaineHealth","ISONE","ISONE","Central Maine Power (CMP)","Q3'26",0,1,0,1],
+  ["Midland Health — Permian Basin","ERCOT","ERCOT","Oncor","Q2'26",0,0,0,1],
+  ["Tufts Medicine","ISONE","ISONE","National Grid","Q1'26",0,1,0,0],
+  ["Medical Center Health (TX)","ERCOT","ERCOT","","Q4'25",1,0,0,1],
+  ["Beacon Health","PJM","PJM","","Q4'25",0,1,0,1],
+  ["Abilene Christian University","ERCOT","ERCOT","TXU Energy","Q4'24",0,0,0,1],
+  ["Adventist Health System West","CAISO","CAISO","","Q2'24",0,1,0,0],
+  ["Unity Health (AR)","","N/A","","Q4'23",0,0,0,1],
+  ["LCMC Health (Project Peche)","MISO","MISO","","Q3'23",0,0,1,1],
+  ["CHRISTUS Health","SPPISO/ERCOT/N/A","Multi","","Q2'23",0,0,0,1],
+  ["Southeast Arkansas College (SEARK)","MISO","MISO","Entergy Arkansas","Q1'23",0,0,0,1],
+  ["Tulane University","MISO","MISO","Entergy NO","Q1'22",0,1,0,1],
+  ["University of Arkansas Med Sciences","","N/A","","Q4'19",0,1,0,1],
+  ["Our Lady of the Lake Regional Medical Center","MISO","MISO","Entergy LA","Q4'17",0,0,1,0],
+];
+
+function toRows(raw){
+  return raw.map(r => ({
+    project:r[0], iso:r[1], isoGroup:r[2], utility:r[3], close:r[4],
+    closeSort:qSort(r[4]),
+    newGen:!!r[5], bess:!!r[6], existGen:!!r[7], facDM:!!r[8],
+  }));
+}
+const DATASETS = { upcoming: toRows(RAW_UPCOMING), closed: toRows(RAW_CLOSED) };
+
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+
+const state = { view:"upcoming", search:"", isos:new Set(), prods:new Set(), sortKey:"closeSort", sortDir:1 };
+function activeData(){ return DATASETS[state.view]; }
+
+/* ---------- KPIs ---------- */
+function buildKpis(){
+  const data = activeData();
+  const total = data.length;
+  const regions = new Set(data.map(d=>d.isoGroup)).size;
+  const utils = new Set(data.filter(d=>d.utility).map(d=>d.utility)).size;
+  const scoped = data.filter(d=>d.newGen||d.bess||d.existGen||d.facDM).length;
+  let kpis;
+  if(state.view==="upcoming"){
+    const scheduled = data.filter(d=>d.close).length;
+    kpis = [
+      { label:"Upcoming projects", num:total, sub:"in the consolidated view" },
+      { label:"Projected close set", num:scheduled, sub:(total-scheduled)+" still TBD" },
+      { label:"Grid regions", num:regions, sub:"ISO / RTO / WECC" },
+      { label:"Utilities", num:utils, sub:"distinct providers" },
+      { label:"Products scoped", num:scoped, sub:(total-scoped)+" with none yet" },
+    ];
+  } else {
+    const sorted = [...data].sort((a,b)=>a.closeSort-b.closeSort);
+    kpis = [
+      { label:"Closed projects", num:total, sub:"in the consolidated view" },
+      { label:"Latest close", num:sorted[sorted.length-1].close, qtr:true, sub:"earliest "+sorted[0].close },
+      { label:"Grid regions", num:regions, sub:"ISO / RTO / multi-region" },
+      { label:"Utilities", num:utils, sub:"named in the source" },
+      { label:"Products scoped", num:scoped, sub:(total-scoped)+" with none listed" },
+    ];
+  }
+  document.getElementById("kpis").innerHTML = kpis.map(k=>`
+    <div class="kpi"><span class="rail"></span>
+      <p class="label">${k.label}</p>
+      <div class="num${k.qtr?' qtr':''}">${k.num}</div>
+      <p class="sub">${k.sub}</p>
+    </div>`).join("");
+}
+
+/* ---------- ISO bar chart ---------- */
+function buildIsoBars(){
+  const counts = {};
+  activeData().forEach(d=> counts[d.isoGroup]=(counts[d.isoGroup]||0)+1 );
+  const rows = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const max = Math.max(...rows.map(r=>r[1]));
+  document.getElementById("isoBars").innerHTML = rows.map(([name,n])=>`
+    <div class="bar-row">
+      <span class="name">${name}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${n/max*100}%;background:var(--accent)"></div></div>
+      <span class="val">${n}</span>
+    </div>`).join("");
+}
+
+/* ---------- product coverage ---------- */
+function buildProdCov(){
+  const data = activeData();
+  const total = data.length;
+  document.getElementById("prodCov").innerHTML = PRODUCTS.map(p=>{
+    const n = data.filter(d=>d[p.key]).length;
+    return `<div class="cov-row">
+        <div class="cov-top"><span class="dot" style="background:${p.color}"></span>${p.full}</div>
+        <span class="cov-val">${n}</span>
+        <div class="cov-track"><div class="cov-fill" style="width:${total?n/total*100:0}%;background:${p.color}"></div></div>
+      </div>`;
+  }).join("");
+}
+
+/* ---------- filters ---------- */
+function buildFilters(){
+  const isos = [...new Set(activeData().map(d=>d.isoGroup))].sort();
+  document.getElementById("isoFilters").innerHTML = isos.map(i=>`<button class="chip" data-iso="${i}" aria-pressed="false">${i}</button>`).join("");
+  document.getElementById("prodFilters").innerHTML = PRODUCTS.map(p=>`<button class="chip" data-prod="${p.key}" aria-pressed="false">${p.short}</button>`).join("");
+
+  document.querySelectorAll("[data-iso]").forEach(b=> b.onclick=()=>{ toggle(state.isos,b.dataset.iso,b); render(); });
+  document.querySelectorAll("[data-prod]").forEach(b=> b.onclick=()=>{ toggle(state.prods,b.dataset.prod,b); render(); });
+}
+function toggle(set,val,btn){ if(set.has(val)){set.delete(val);btn.setAttribute("aria-pressed","false");} else {set.add(val);btn.setAttribute("aria-pressed","true");} }
+
+/* ---------- footer legend ---------- */
+function buildLegend(){
+  document.getElementById("footLegend").innerHTML = PRODUCTS.map(p=>`<span><span class="dot" style="background:${p.color}"></span>${p.full}</span>`).join("");
+}
+
+/* ---------- table ---------- */
+function currentRows(){
+  let rows = activeData().filter(d=>{
+    if(state.isos.size && !state.isos.has(d.isoGroup)) return false;
+    for(const p of state.prods){ if(!d[p]) return false; }
+    if(state.search){
+      const s = state.search.toLowerCase();
+      if(!(d.project+" "+d.iso+" "+d.utility+" "+d.isoGroup).toLowerCase().includes(s)) return false;
+    }
+    return true;
+  });
+  const k = state.sortKey, dir = state.sortDir;
+  rows.sort((a,b)=>{
+    let av=a[k], bv=b[k];
+    if(typeof av==="string"){ av=av.toLowerCase(); bv=bv.toLowerCase(); }
+    return av<bv? -1*dir : av>bv? 1*dir : 0;
+  });
+  return rows;
+}
+
+function render(){
+  const rows = currentRows();
+  const total = activeData().length;
+  const noun = state.view==="upcoming" ? "upcoming" : "closed";
+  const cl = document.getElementById("countLine");
+  cl.innerHTML = `Showing <b>${rows.length}</b> of ${total} ${noun} projects` +
+    (state.isos.size||state.prods.size||state.search ? ` · <span style="color:var(--accent);cursor:pointer" id="clearAll">clear filters</span>` : "");
+  const c = document.getElementById("clearAll");
+  if(c) c.onclick=clearAll;
+
+  document.getElementById("tbody").innerHTML = rows.map(d=>{
+    const cells = PRODUCTS.map(p=> d[p.key]
+      ? `<td class="prod"><span class="pchip" style="background:${p.bg};color:${p.color}" title="${p.full}: in scope">${CHECK}</span></td>`
+      : `<td class="prod"><span class="pnone">–</span></td>`
+    ).join("");
+    const isoNa = (d.isoGroup==="N/A"||d.isoGroup==="Multi") ? " na" : "";
+    const isoTxt = d.iso || "—";
+    const utilTxt = d.utility || "—";
+    const qhtml = d.close
+      ? `<span class="q-tag">${d.close}</span>`
+      : `<span class="q-tbd">TBD</span>`;
+    return `<tr>
+      <td class="project">${d.project}</td>
+      <td class="iso"><span class="iso-tag${isoNa}">${isoTxt}</span></td>
+      <td class="util">${utilTxt}</td>
+      <td>${qhtml}</td>
+      ${cells}
+    </tr>`;
+  }).join("") || `<tr><td colspan="8" style="text-align:center;color:var(--faint);padding:36px">No projects match these filters.</td></tr>`;
+
+  document.querySelectorAll("thead th.sortable").forEach(th=>{
+    const arr = th.querySelector(".arrow"); if(arr) arr.remove();
+    if(th.dataset.key===state.sortKey){
+      const s=document.createElement("span"); s.className="arrow"; s.textContent = state.sortDir>0?"▲":"▼"; th.appendChild(s);
+    }
+  });
+}
+
+function clearAll(){
+  state.isos.clear(); state.prods.clear(); state.search="";
+  document.getElementById("search").value="";
+  document.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed","false"));
+  render();
+}
+
+/* ---------- view switching ---------- */
+function setView(v){
+  state.view = v;
+  state.sortKey = "closeSort";
+  state.sortDir = v==="closed" ? -1 : 1;   // closed: most recent first
+  state.isos.clear(); state.prods.clear(); state.search="";
+  document.getElementById("search").value="";
+  document.getElementById("tabUpcoming").setAttribute("aria-selected", v==="upcoming");
+  document.getElementById("tabClosed").setAttribute("aria-selected", v==="closed");
+  document.getElementById("closeHead").childNodes[0].textContent = v==="upcoming" ? "Projected Close" : "Closed";
+  buildKpis(); buildIsoBars(); buildProdCov(); buildFilters(); render();
+}
+document.getElementById("tabUpcoming").onclick=()=>setView("upcoming");
+document.getElementById("tabClosed").onclick=()=>setView("closed");
+
+/* ---------- events ---------- */
+document.getElementById("search").addEventListener("input", e=>{ state.search=e.target.value.trim(); render(); });
+document.querySelectorAll("thead th.sortable").forEach(th=>{
+  th.onclick=()=>{ const k=th.dataset.key;
+    if(state.sortKey===k) state.sortDir*=-1; else { state.sortKey=k; state.sortDir=1; }
+    render();
+  };
+});
+
+/* ---------- theme ---------- */
+const root = document.documentElement;
+function setTheme(t){
+  root.setAttribute("data-theme", t);
+  document.getElementById("themeIcon").textContent = t==="dark" ? "☾" : "☀";
+  document.getElementById("themeLabel").textContent = t==="dark" ? "Dark" : "Light";
+}
+document.getElementById("themeBtn").onclick=()=>{
+  const cur = root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+  setTheme(cur==="dark"?"light":"dark");
+};
+setTheme(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+
+/* ---------- init ---------- */
+document.getElementById("nUpcoming").textContent = DATASETS.upcoming.length;
+document.getElementById("nClosed").textContent = DATASETS.closed.length;
+buildLegend();
+setView("upcoming");
+</script>

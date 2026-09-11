@@ -262,7 +262,7 @@
 
   <footer>
     <div class="lg" id="footLegend"></div>
-    <p class="note">A <b>✓</b> in the source workbook means the product is in scope for that project; an <b>x</b> or a blank means not in scope. Upcoming projects without a projected-close quarter are shown as <b>TBD</b>; a <b>—</b> means the field is blank in the source. Closed-project dates are the closing quarter from the workbook's Closed tab. Source: <i>Upcoming and Active Projects — Consolidated.xlsx</i> (static copy, July 29, 2026) · Bernhard / ENFRA.</p>
+    <p class="note">A <b>✓</b> in the source workbook means the product is in scope for that project; an <b>x</b> or a blank means not in scope. Upcoming projects without a projected-close quarter are shown as <b>TBD</b>; a <b>—</b> means the field is blank in the source. Closed-project dates are the closing quarter from the workbook's Closed tab. Source: <i>Upcoming and Active Projects — Consolidated.xlsx</i> (static copy, August 24, 2026) · Bernhard / ENFRA.</p>
   </footer>
 </div>
 
@@ -280,24 +280,19 @@ function qSort(c){ if(!c) return 9999; const m=c.match(/Q(\d)'(\d\d)/); return m
 // Product flags: 1 = ✓ (in scope). "x" and blank in the source both mean NOT in scope (0).
 // Columns: project, iso (as shown), isoGroup (for filtering), utility, close, newGen, bess, existGen, facDM
 const RAW_UPCOMING = [
-  ["Brown University Health","ISONE","ISONE","Rhode Island Energy","Q3'26",0,1,0,0],
-  ["Northwestern Health","PJM","PJM","ComEd","Q3'26",0,1,1,1],
-  ["Indiana University Health","MISO","MISO","AES, Duke, IMP","Q4'26",0,1,0,0],
+  ["Brown University Health","ISONE","ISONE","Rhode Island Energy","Q1'27",0,1,0,0],
+  ["Northwestern Health","PJM","PJM","ComEd","Q1'27",0,1,1,0],
+  ["Indiana University Health","MISO","MISO","AES, Duke, IMP","Q1'27",0,1,0,0],
   ["Xavier University","PJM","PJM","Duke Energy Ohio","Q4'26",0,1,0,1],
-  ["PIH Health — Phase 2","CAISO","CAISO","Southern California Edison","Q4'26",0,0,0,0],
-  ["Northern Light","ISONE","ISONE","Central Maine Power (CMP)","Q4'26",0,1,0,0],
-  ["Sharp Healthcare","CAISO","CAISO","SDG&E","Q4'26",0,0,0,0],
-  ["Bay State","ISONE","ISONE","Eversource","Q4'26",0,1,0,0],
-  ["U of L Health","N/A","N/A","LG&E/KU","Q4'26",0,0,0,0],
-  ["La Sierra University","CAISO","CAISO","Riverside Public Utilities","",0,0,0,1],
+  ["Northern Light","ISONE","ISONE","Central Maine Power (CMP)","Q1'27",0,1,0,0],
+  ["BayState","ISONE","ISONE","Eversource","Q1'27",0,1,0,0],
   ["Westchester Medical","NYISO","NYISO","Con Edison","Q4'26",0,1,0,0],
   ["Kaleida Health","NYISO","NYISO","National Grid","Q1'27",0,1,0,0],
-  ["Beacon Health","PJM","PJM","Indiana Michigan Power (AEP)","",0,0,1,0],
   ["Parkview Health","PJM","PJM","Indiana Michigan Power (AEP)","Q1'27",0,1,0,0],
 ];
 const RAW_CLOSED = [
-  ["Hartford HealthCare","ISONE","ISONE","Eversource","Q3'26",0,1,0,1],
-  ["MaineHealth","ISONE","ISONE","Central Maine Power (CMP)","Q3'26",0,1,0,1],
+  ["Hartford HealthCare","ISONE","ISONE","Eversource","Q3'26",0,1,0,0],
+  ["MaineHealth","ISONE","ISONE","Central Maine Power (CMP)","Q3'26",0,1,0,0],
   ["Midland Health — Permian Basin","ERCOT","ERCOT","Oncor","Q2'26",0,0,0,1],
   ["Tufts Medicine","ISONE","ISONE","National Grid","Q1'26",0,1,0,0],
   ["Medical Center Health (TX)","ERCOT","ERCOT","","Q4'25",1,0,0,1],
